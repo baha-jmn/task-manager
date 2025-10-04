@@ -1,4 +1,4 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { computed, Injectable, Signal, signal } from '@angular/core';
 import { environment } from '../../../environments/environment.dev';
 import { Task } from '../models/task.model';
@@ -13,13 +13,17 @@ export class TaskService {
   private _tasks = signal<Task[]>([]);
   tasks: Signal<Task[]> = computed(() => this._tasks());
 
+  private headers = new HttpHeaders({
+    'Content-Type': 'application/json'
+  });
+
   constructor(
     private http: HttpClient
   ) { }
 
 
   getAllTasks() {
-    this.http.get<Task[]>(this.tasksApiUrl).subscribe({
+    this.http.get<Task[]>(this.tasksApiUrl, { headers: this.headers }).subscribe({
       next: (tasks) => this._tasks.set(tasks),
       error: (err) => console.error('Error loading tasks', err)
     });
@@ -48,40 +52,25 @@ export class TaskService {
         params = params.set('dueDateEnd', filters.dueDateTo);
     }
 
-    this.http.get<Task[]>(`${this.tasksApiUrl}/filter`, { params }).subscribe({
+    this.http.get<Task[]>(`${this.tasksApiUrl}/filter`, { params, headers: this.headers }).subscribe({
       next: (tasks) => this._tasks.set(tasks),
       error: (err) => console.error('Error loading tasks with filters', err)
     });
   }
 
   getTaskById(id: string) {
-    return this.http.get<Task>(`${this.tasksApiUrl}/${id}`);
+    return this.http.get<Task>(`${this.tasksApiUrl}/${id}`, { headers: this.headers });
   }
 
   createTask(task: Task) {
-    return this.http.post<Task>(this.tasksApiUrl, task).subscribe({
-      next: (newTask) => this._tasks.update(tasks => [...tasks, newTask]),
-      error: (err) => console.error('Error creating task', err)
-    });
+    return this.http.post<Task>(this.tasksApiUrl, task, { headers: this.headers });
   }
 
   updateTask(task: Task) {
-    return this.http.put<Task>(`${this.tasksApiUrl}/${task.id}`, task).subscribe({
-      next: (updatedTask) => {
-        this._tasks.update(tasks =>
-          tasks.map(t => (t.id === updatedTask.id ? updatedTask : t))
-        );
-      },
-      error: (err) => console.error('Error updating task', err)
-    });
+    return this.http.put<Task>(`${this.tasksApiUrl}/${task.id}`, task, { headers: this.headers });
   }
 
   deleteTask(id: string) {
-    return this.http.delete<void>(`${this.tasksApiUrl}/${id}`).subscribe({
-      next: () => {
-        this._tasks.update(tasks => tasks.filter(t => t.id !== id));
-      },
-      error: (err) => console.error('Error deleting task', err)
-    });
+    return this.http.delete<void>(`${this.tasksApiUrl}/${id}`, { headers: this.headers });
   }
 }

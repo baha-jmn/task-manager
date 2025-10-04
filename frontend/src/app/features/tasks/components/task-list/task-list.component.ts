@@ -7,6 +7,7 @@ import { TaskService } from '../../../../core/services/task.service';
 import { Task } from '../../../../core/models/task.model';
 import { ModalComponent } from '../../../../shared/components/modal/modal.component';
 import { TaskFormComponent } from '../task-form/task-form.component';
+import { ToastService } from '../../../../core/services/toast.service';
 
 @Component({
   selector: 'app-task-list',
@@ -39,7 +40,10 @@ export class TaskListComponent implements OnInit {
   showTaskForm = signal(false);
   selectedTask: Task | null = null;
 
-  constructor(private taskService: TaskService) {
+  constructor(
+    private taskService: TaskService,
+    private toastService: ToastService
+  ) {
     this.loadTasks();
   }
 
@@ -97,16 +101,32 @@ export class TaskListComponent implements OnInit {
   onTaskFormSubmit(task: Task) {
     this.showTaskForm.set(false);
     if (task.id) {
-      this.taskService.updateTask(task);
+      this.taskService.updateTask(task).subscribe({
+        next: () => {
+          this.toastService.show("Task updated successfully!");
+          this.loadTasks();
+        },
+        error: (err) => console.error(err)
+      });
     } else {
-      this.taskService.createTask(task);
+      this.taskService.createTask(task).subscribe({
+        next: () => {
+          this.toastService.show("Task created successfully!");
+          this.loadTasks();
+        },
+        error: (err) => console.error(err)
+      });
     }
   }
 
   deleteTask(id: string) {
-    this.isLoading.set(true);
-    this.taskService.deleteTask(id);
-    this.isLoading.set(false);
+    this.taskService.deleteTask(id).subscribe({
+      next: () => {
+        this.toastService.show("Task deleted successfully!");
+        this.loadTasks();
+      },
+      error: (err) => console.error(err)
+    });
   }
 
   statusClass(status: string) {
