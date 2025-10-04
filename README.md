@@ -6,7 +6,11 @@ This is a Fullstack Task Management System built with:
 
 Backend: Spring Boot 3.4.10 (there is no 3.2.2 on start.spring.io)
 
-Frontend: Angular 18
+Node.js : 22.16.0
+
+Frontend: Angular 18.2.21
+
+State Management: Signals
 
 Database: MongoDB (localhost)
 
@@ -62,7 +66,14 @@ Frontend :
 
 cd frontend
 npm install
-ng serve
+
+for serving :
+ng serve --configuration=development
+ng serve --configuration=production
+
+for building :
+ng build --configuration=development
+ng build --configuration=production
 
 Frontend runs on:
 http://localhost:4200
@@ -72,7 +83,7 @@ Postman Collection (tested APIs) :
 
 Link to GitHub file :
 You can test API endpoints with the provided Postman collection:
-<LINK_TO_POSTMAN_COLLECTION>
+https://github.com/baha-jmn/task-manager/blob/main/postman/task-manager-api.postman_collection.json
 
 
 --------------------------------------------------------------

@@ -1,28 +1,38 @@
 package com.baha.taskmanager.service;
 
+import com.baha.taskmanager.dto.TaskDTO;
 import com.baha.taskmanager.exception.TaskNotFoundException;
 import com.baha.taskmanager.model.Task;
 import com.baha.taskmanager.repository.TaskRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
+import java.sql.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
 public class TaskService {
-    private final TaskRepository taskRepository;
+    @Autowired
+    private TaskRepository taskRepository;
+
     private final MongoTemplate mongoTemplate;
 
     public TaskService(TaskRepository taskRepository, MongoTemplate mongoTemplate) {
-        this.taskRepository = taskRepository;
         this.mongoTemplate = mongoTemplate;
     }
 
-    public Task createTask(Task task) {
+    public Task createTask(TaskDTO taskDTO) {
+        Task task = new Task();
+        task.setTitle(taskDTO.getTitle());
+        task.setDescription(taskDTO.getDescription());
+        task.setStatus(taskDTO.getStatus());
+        task.setPriority(taskDTO.getPriority());
+        task.setDueDate(taskDTO.getDueDate());
         return taskRepository.save(task);
     }
 
@@ -34,13 +44,13 @@ public class TaskService {
         return taskRepository.findById(id).orElseThrow(() -> new TaskNotFoundException(id));
     }
 
-    public Task updateTask(String id, Task updatedTask) {
-        Task task = getTaskById(id);
-        task.setTitle(updatedTask.getTitle());
-        task.setDescription(updatedTask.getDescription());
-        task.setStatus(updatedTask.getStatus());
-        task.setPriority(updatedTask.getPriority());
-        task.setDueDate(updatedTask.getDueDate());
+    public Task updateTask(String id, TaskDTO taskDTO) {
+        Task task = taskRepository.findById(id).orElseThrow();
+        task.setTitle(taskDTO.getTitle());
+        task.setDescription(taskDTO.getDescription());
+        task.setStatus(taskDTO.getStatus());
+        task.setPriority(taskDTO.getPriority());
+        task.setDueDate(taskDTO.getDueDate());
         return taskRepository.save(task);
     }
 
@@ -51,8 +61,8 @@ public class TaskService {
     public List<Task> filterTasks(
             String status,
             Integer priority,
-            Date dueDateStart,
-            Date dueDateEnd,
+            LocalDate dueDateStart,
+            LocalDate dueDateEnd,
             String search,
             String sortBy,
             String sortDir
@@ -67,9 +77,12 @@ public class TaskService {
             query.addCriteria(Criteria.where("priority").is(priority));
         }
 
-        if (dueDateStart != null &&  dueDateEnd != null) {
-            query.addCriteria(Criteria.where("dueDate").gte(dueDateStart).lte(dueDateEnd));
+        if (dueDateStart != null && dueDateEnd != null) {
+            query.addCriteria(Criteria.where("dueDate")
+                    .gte(Date.valueOf(dueDateStart))
+                    .lte(Date.valueOf(dueDateEnd)));
         }
+
 
 
         if (search != null && !search.isEmpty()) {
